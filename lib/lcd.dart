@@ -9,7 +9,6 @@ void rect(List<List<bool>> lcd, int x, int y) {
 void rotateRow(List<List<bool>> lcd, int row, int by) {
   final rowPixels = lcd[row];
   final l = rowPixels.length;
-  var last = rowPixels[l - 1];
   var lastPixels = rowPixels.sublist(l - by);
   rowPixels.insertAll(0, lastPixels);
   rowPixels.removeRange(l, rowPixels.length);

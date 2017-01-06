@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:logging/logging.dart';
 
 final _logger = new Logger('ips');
@@ -77,4 +78,62 @@ bool supportsSsl(String ip) {
     }
   }
   return false;
+}
+
+class _Range implements Comparable<_Range> {
+  final int from;
+  final int to;
+
+  _Range(this.from, this.to);
+
+  factory _Range.fromString(String s) {
+    var rd = s.split('-');
+    return new _Range(int.parse(rd[0]), int.parse(rd[1]));
+  }
+
+  @override
+  int compareTo(_Range other) {
+    if (other.from != from) return from.compareTo(other.from);
+    return to.compareTo(other.to);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    return other is _Range && this.from == other.from && this.to == other.to;
+  }
+
+  @override
+  int get hashCode {
+    return from.hashCode ^ to.hashCode;
+  }
+}
+
+int findAllowedIp(String blockedIpsString, {bool countRange: false}) {
+  var ranges = blockedIpsString
+      .split('\n')
+      .where((s) => s.isNotEmpty)
+      .map((s) => new _Range.fromString(s))
+      .toList(growable: false);
+  ranges.sort();
+  if (ranges.first.from > 0) return 0;
+
+  var count = 0;
+  var to = ranges.first.to;
+  for (int i = 0; i < ranges.length; i++) {
+    var currentRange = ranges[i];
+    if (currentRange.from > to + 1) {
+      if (!countRange) {
+        return to + 1;
+      }
+      count += currentRange.from - (to + 1);
+    }
+
+    to = math.max(to, currentRange.to);
+  }
+
+  if (!countRange) print('Could not find a solution');
+  return count;
 }

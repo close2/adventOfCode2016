@@ -9,6 +9,9 @@ dependencies:
   resource: any
   logging: any
   crypto: any
+  trotter: any
+  built_collection: any
+  collection: any
 
 dev_dependencies:
   test: '>=0.12.0 <0.13.0'
