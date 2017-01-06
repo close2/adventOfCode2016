@@ -83,6 +83,27 @@ Iterable<Point> _shortestPath(Point from, Point to, List<List<String>> map) {
   }
 }
 
+class _Pair {
+  final Point from;
+  final Point to;
+
+  _Pair(this.from, this.to);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    return other is _Pair &&
+        this.from == other.from &&
+        this.to == other.to;
+  }
+
+  @override
+  int get hashCode {
+    return from.hashCode ^ to.hashCode;
+  }
+}
 List<Point> findPath(String mapDesc, {bool goHome: false}) {
   var pointsOfInterest = <Point>[];
   Point start;
@@ -107,6 +128,8 @@ List<Point> findPath(String mapDesc, {bool goHome: false}) {
 
   List<Point> bestPath = null;
 
+  var partialPaths = <_Pair, Iterable<Point>>{};
+
   var perms = new Permutations(pointsOfInterest.length, pointsOfInterest);
   for (int i = 0; i < perms.length; i++) {
     var perm = perms[i] as List<Point>;
@@ -119,9 +142,27 @@ List<Point> findPath(String mapDesc, {bool goHome: false}) {
     for (var p = 0; p < points.length - 1; p++) {
       var from = points[p];
       var to = points[p + 1];
-      path.addAll(_shortestPath(from, to, map));
+      Iterable<Point> newPathPart;
+      var pair = new _Pair(from, to);
+      var revPair = new _Pair(to, from);
+
+      if (partialPaths.containsKey(pair)) {
+        newPathPart = partialPaths[pair];
+      } else if (partialPaths.containsKey(revPair)) {
+        newPathPart = partialPaths[revPair].toList(growable: false).reversed;
+      } else {
+        newPathPart = partialPaths[new _Pair(from, to)] ?? _shortestPath(from, to, map);
+        partialPaths[pair] = newPathPart;
+      }
+
+      if (bestPath != null && bestPath.length < (path.length + newPathPart.length)) {
+        // Longer than bestPath, abort.
+        path = [];
+        break;
+      }
+      path.addAll(newPathPart);
     }
-    if (bestPath == null || path.length < bestPath.length) {
+    if (path.isNotEmpty) {
       bestPath = path;
     }
   }
