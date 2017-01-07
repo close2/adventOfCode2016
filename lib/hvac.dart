@@ -44,7 +44,7 @@ Iterable<_Node> _buildNeighbours(_Node current, Point target, List<List<String>>
   return neighbourPoints.map((p) => new _Node(current, p, current.g + 1, _dist(p, target)));
 }
 
-Iterable<Point> _shortestPath(Point from, Point to, List<List<String>> map) {
+int _shortestPath(Point from, Point to, List<List<String>> map) {
   var closed = new Set<Point>();
   var open = new PriorityQueue<_Node>();
   var p2n = <Point, _Node>{};
@@ -59,11 +59,11 @@ Iterable<Point> _shortestPath(Point from, Point to, List<List<String>> map) {
     closed.add(point);
 
     if (point == to) {
-      var path = <Point>[];
+      int counter = 0;
       for (var runner = current; runner != null && runner.parent != null; runner = runner.parent) {
-        path.add(runner.point);
+        counter++;
       }
-      return path.reversed;
+      return counter;
     }
 
     var neighbours = _buildNeighbours(current, to, map);
@@ -104,7 +104,7 @@ class _Pair {
     return from.hashCode ^ to.hashCode;
   }
 }
-List<Point> findPath(String mapDesc, {bool goHome: false}) {
+int findPath(String mapDesc, {bool goHome: false}) {
   var pointsOfInterest = <Point>[];
   Point start;
 
@@ -126,9 +126,9 @@ List<Point> findPath(String mapDesc, {bool goHome: false}) {
     }
   }
 
-  List<Point> bestPath = null;
+  int bestPath = null;
 
-  var partialPaths = <_Pair, Iterable<Point>>{};
+  var partialPaths = <_Pair, int>{};
 
   var perms = new Permutations(pointsOfInterest.length, pointsOfInterest);
   for (int i = 0; i < perms.length; i++) {
@@ -138,31 +138,28 @@ List<Point> findPath(String mapDesc, {bool goHome: false}) {
       points.add(start);
     }
 
-    var path = <Point>[];
+    int path = 0;
     for (var p = 0; p < points.length - 1; p++) {
       var from = points[p];
       var to = points[p + 1];
-      Iterable<Point> newPathPart;
+
       var pair = new _Pair(from, to);
       var revPair = new _Pair(to, from);
 
-      if (partialPaths.containsKey(pair)) {
-        newPathPart = partialPaths[pair];
-      } else if (partialPaths.containsKey(revPair)) {
-        newPathPart = partialPaths[revPair].toList(growable: false).reversed;
-      } else {
-        newPathPart = partialPaths[new _Pair(from, to)] ?? _shortestPath(from, to, map);
+      int newPathPart = partialPaths[pair] ?? partialPaths[revPair];
+      if (newPathPart == null) {
+        newPathPart = _shortestPath(from, to, map);
         partialPaths[pair] = newPathPart;
       }
 
-      if (bestPath != null && bestPath.length < (path.length + newPathPart.length)) {
+      if (bestPath != null && bestPath < (path + newPathPart)) {
         // Longer than bestPath, abort.
-        path = [];
+        path = 0;
         break;
       }
-      path.addAll(newPathPart);
+      path += newPathPart;
     }
-    if (path.isNotEmpty) {
+    if (path > 0) {
       bestPath = path;
     }
   }

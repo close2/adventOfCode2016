@@ -17,6 +17,6 @@ main(List<String> arguments) async {
   var resource = new Resource(inputA);
   var input = await resource.readAsString();
 
-  print('Day24 A.  ${findPath(input).length}');
-  print('Day24 B.  ${findPath(input, goHome: true).length}');
+  print('Day24 A.  ${findPath(input)}');
+  print('Day24 B.  ${findPath(input, goHome: true)}');
 }

@@ -11,6 +11,6 @@ final map = '''
 
 void allTests() {
   test('ex1', () {
-    expect(findPath(map).length, 14);
+    expect(findPath(map), 14);
   });
 }
